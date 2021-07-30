@@ -6,6 +6,14 @@ import java.util.*;
 import java.text.*;
 import java.sql.*;
 
+/**
+ * <p>
+ * <code>GradeImpl</code>类是用于实现管理跟成绩有关的表。
+ * 该类接收从前端传入后端的信息，并且根据信息返回指定类型的操作，包括但不限于增删改查跟成绩有关的数据库的表。
+ * 
+ * @author 09019111赖泽升
+ * @version 1.0
+ */
 public class GradeImpl implements StudentDao, BaseDao {
   Connection connection;
   private static String database = "mysql";
@@ -66,7 +74,7 @@ public class GradeImpl implements StudentDao, BaseDao {
    * 
    * @return 若返回1则代表添加用户信息成功，若返回-1代表添加信息失败
    */
-  public Integer addUser(String[] args) {
+  public Integer addUser(String [] args) {
     for (String i : args) {
       System.out.print(i);
       System.out.print(",");
@@ -99,6 +107,7 @@ public class GradeImpl implements StudentDao, BaseDao {
       return 1;
     } catch (BatchUpdateException e) {
       System.out.println("This record is existing in the table!");
+      e.printStackTrace();
       return -1;
     } catch (Exception e) {
       e.printStackTrace();
@@ -202,6 +211,8 @@ public class GradeImpl implements StudentDao, BaseDao {
    *         每一行的信息为（0：一卡通，1：课程id，2：成绩）
    */
   public ArrayList<ArrayList<String>> searchOneUser(String condition_name, String condition) {
+    System.out.print(condition_name + "," + condition);
+    System.out.println(" ");
     Statement statement = null;
     ResultSet rs = null;
     ResultSetMetaData rsmd = null;
@@ -285,7 +296,46 @@ public class GradeImpl implements StudentDao, BaseDao {
     }
   }
 
-  public static void main(String[] args) {
+  /**
+   * 根据一卡通号和课程号返回学生成绩
+   * 
+   * @param id     一卡通号
+   * @param cou_id 课程号
+   * @return 返回对应的成绩
+   */
+  public String searchGrade(String id, String cou_id) {
+    System.out.print(id + "," + cou_id);
+    System.out.println(" ");
+    Statement statement = null;
+    ResultSet rs = null;
+    String score = "null";
 
+    try {
+      getConnection();
+      String sql = null;
+      statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+      sql = "SELECT* FROM " + GradeTableName + " WHERE id=" + id + " AND course_id=" + "'" + cou_id + "'";
+      rs = statement.executeQuery(sql);
+      while (rs.next()) {
+        score = rs.getString(3);
+      }
+      return score;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return score;
+    } finally {
+      try {
+        statement.close();
+        rs.close();
+        connection.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  public static void main(String[] args) {
+    GradeImpl gl = new GradeImpl();
+    System.out.println(gl.searchGrade("213191246", "ZR1000"));
   }
 }

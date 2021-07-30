@@ -6,6 +6,14 @@ import java.util.*;
 import java.text.*;
 import java.sql.*;
 
+/**
+ * <p>
+ * <code>LogInImpl</code>类是用于实现管理存储用户信息的表。
+ * 该类接收从前端传入后端的信息，并且根据信息返回指定类型的操作，包括但不限于增删改查存储用户信息的表。
+ * 
+ * @author 09019111赖泽升
+ * @version 1.0
+ */
 public class LogInImpl implements StudentDao, BaseDao {
   private HashMap<String, String> authority = new HashMap<String, String>();
   private HashMap<String, String> sex = new HashMap<String, String>();
@@ -76,20 +84,20 @@ public class LogInImpl implements StudentDao, BaseDao {
   }
 
   /**
-   * @param args 用户的所有信息（0：一卡通，1：昵称，2：密码，3：姓名，4：权限，5：年龄，6：性别，7：入学时间，8：专业/职称，9：学院，10：金钱）；
+   * @param args 用户的所有信息（0：一卡通，1：昵称，2：密码，3：姓名，4：权限，5：年龄，6：性别，7：入学时间，8：专业/职称，9：学院，10：金钱，11：图片rul）；
    *             其中，在权限中，1代表教务老师，2代表图书管理员，3代表商店管理员，4代表老师，5代表学生； 在性别中，1代表男士，2代表女士；
    * 
    * @return 若返回1则代表添加用户信息成功，若返回-1代表添加信息失败
    */
   public Integer addUser(String[] args) {
-    for(String i:args){
+    for (String i : args) {
       System.out.print(i);
       System.out.print(",");
     }
     System.out.println(" ");
-    
+
     int id, authority, age, sex;
-    String nickname, password, name, time, profession, college;
+    String nickname, password, name, time, profession, college, url;
     double money;
 
     id = Integer.parseInt(args[0]);
@@ -103,12 +111,13 @@ public class LogInImpl implements StudentDao, BaseDao {
     profession = args[8];
     college = args[9];
     money = Double.parseDouble(args[10]);
+    url = args[11];
 
     PreparedStatement pstmt = null;
     try {
       getConnection();
       String sql = "INSERT INTO tblUser"
-          + "(id,nickname,password,name,authority,age,sex,time,profession,college,money) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
+          + "(id,nickname,password,name,authority,age,sex,time,profession,college,money,url,netfee) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
       pstmt = connection.prepareStatement(sql);
 
       pstmt.setInt(1, id);
@@ -122,6 +131,8 @@ public class LogInImpl implements StudentDao, BaseDao {
       pstmt.setString(9, profession);
       pstmt.setString(10, college);
       pstmt.setDouble(11, money);
+      pstmt.setString(12, url);
+      pstmt.setDouble(13, 0);
 
       pstmt.addBatch();
       pstmt.clearParameters();
@@ -194,20 +205,20 @@ public class LogInImpl implements StudentDao, BaseDao {
   /**
    * 用于修改用户再数据库中的信息
    * 
-   * @param args 用户的所有信息(0：一卡通，1：昵称，2：密码，3：姓名，4：权限，5：年龄，6：性别，7：入学时间，8：专业/职称，9：学院)；
+   * @param args 用户的所有信息(0：一卡通，1：昵称，2：密码，3：姓名，4：权限，5：年龄，6：性别，7：入学时间，8：专业/职称，9：学院，10：金钱，11：图片url)；
    *             其中，在权限中，1代表教务老师，2代表图书管理员，3代表商店管理员，4代表老师，5代表学生； 在性别中，1代表男士，2代表女士；
    * 
    * @return 若返回1则代表修改用户信息成功，若返回-1代表修改信息失败
    */
   public Integer updateUser(String[] args) {
-    for(String i:args){
+    for (String i : args) {
       System.out.print(i);
       System.out.print(",");
     }
     System.out.println(" ");
 
     int id, authority, age, sex;
-    String nickname, password, name, time, profession, college;
+    String nickname, password, name, time, profession, college, url;
     double money;
 
     id = Integer.parseInt(args[0]);
@@ -221,6 +232,7 @@ public class LogInImpl implements StudentDao, BaseDao {
     profession = args[8];
     college = args[9];
     money = Double.parseDouble(args[10]);
+    url = args[11];
 
     PreparedStatement pstmt = null;
     try {
@@ -265,7 +277,7 @@ public class LogInImpl implements StudentDao, BaseDao {
    * @param condition_name 需要查询的索引
    * @param condition      索引值
    * @return 返回为符合该索引值的所有信息，包括一卡通号，姓名，年龄等等， 服务端根据客户端的需求自行选择信息返回(注意：下标从0开始！！)；
-   *         每一行的信息为（0：一卡通，1：昵称，2：密码，3：姓名，4：权限，5：年龄，6：性别，7：入学时间，8：专业/职称，9：学院）
+   *         每一行的信息为（0：一卡通，1：昵称，2：密码，3：姓名，4：权限，5：年龄，6：性别，7：入学时间，8：专业/职称，9：学院，10金钱，11：图片url，12：网费）
    */
   public ArrayList<ArrayList<String>> searchOneUser(String condition_name, String condition) {
     Statement statement = null;
@@ -389,6 +401,108 @@ public class LogInImpl implements StudentDao, BaseDao {
     }
   }
 
+  /**
+   * 用于根据一卡通号修改卡中的余额
+   * 
+   * @param id    一卡通
+   * @param money 修改过后的金钱
+   * @return 若修改成功则返回1，否则返回-1
+   */
+  public Integer updateMoney(String id, String money) {
+    PreparedStatement pstmt = null;
+    try {
+      getConnection();
+      String sql = "UPDATE " + tableName + " SET money=?" + " WHERE id=" + id;
+      pstmt = connection.prepareStatement(sql);
+
+      pstmt.setDouble(1, Double.parseDouble(money));
+
+      pstmt.executeUpdate();
+      return 1;
+    } catch (SQLException e) {
+      e.printStackTrace();
+      return -1;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return -1;
+    } finally {
+      try {
+        pstmt.close();
+        connection.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  /**
+   * 用于根据一卡通号充值网费
+   * 
+   * @param id    一卡通
+   * @param money 修改过后的网费
+   * @return 若修改成功则返回1，否则返回-1
+   */
+  public Integer updateNetFee(String id, String netfee) {
+    PreparedStatement pstmt = null;
+    try {
+      getConnection();
+      String sql = "UPDATE " + tableName + " SET netfee=?" + " WHERE id=" + id;
+      pstmt = connection.prepareStatement(sql);
+
+      pstmt.setDouble(1, Double.parseDouble(netfee));
+
+      pstmt.executeUpdate();
+      return 1;
+    } catch (SQLException e) {
+      e.printStackTrace();
+      return -1;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return -1;
+    } finally {
+      try {
+        pstmt.close();
+        connection.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  /**
+   * 用于根据一卡通号4更新图片
+   * 
+   * @param id    一卡通
+   * @param money 修改过后的图片url
+   * @return 若修改成功则返回1，否则返回-1
+   */
+  public Integer updatePhoto(String id, String url) {
+    PreparedStatement pstmt = null;
+    try {
+      getConnection();
+      String sql = "UPDATE " + tableName + " SET url=?" + " WHERE id=" + id;
+      pstmt = connection.prepareStatement(sql);
+
+      pstmt.setString(1, url);
+
+      pstmt.executeUpdate();
+      return 1;
+    } catch (SQLException e) {
+      e.printStackTrace();
+      return -1;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return -1;
+    } finally {
+      try {
+        pstmt.close();
+        connection.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
   public static void main(String[] args) {
     LogInImpl li = new LogInImpl();
     String[] messages1 = { "213191247", "null", "123456", "赖泽升", "5", "20", "1", "null", "null", "null", "0" };
@@ -396,7 +510,7 @@ public class LogInImpl implements StudentDao, BaseDao {
     System.out.println(li.addUser(messages2));
     // ArrayList<ArrayList<String>> al = li.searchOneUser("id", "213191246");
     // System.out.println(al);
-    //li.updateUser(messages2);
+    // li.updateUser(messages2);
     // li.deleteUser(213191246);
     // al = li.searchOneUser("id", "213191246");
     // System.out.println(al);

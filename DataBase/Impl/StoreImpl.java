@@ -6,6 +6,15 @@ import java.util.*;
 import java.text.*;
 import java.sql.*;
 
+
+/**
+ * <p>
+ * <code>StoreImpl</code>类是用于实现管理与商品相关的表。
+ * 该类接收从前端传入后端的信息，并且根据信息返回指定类型的操作，包括但不限于增删改查与商品相关的表。
+ * 
+ * @author 09019111赖泽升
+ * @version 1.0
+ */
 public class StoreImpl implements BaseDao, StudentDao {
   Connection connection;
   private HashMap<String, String> hand = new HashMap<String, String>();
@@ -75,12 +84,12 @@ public class StoreImpl implements BaseDao, StudentDao {
    * @return 若添加成功则返回1，否则返回-1
    */
   public Integer addUser(String[] args) {
-    for(String i:args){
+    for (String i : args) {
       System.out.print(i);
       System.out.print(",");
     }
     System.out.println(" ");
-    
+
     String commodity_id, type, commodity_name, time, poster, image;
     double price, value, discount;
     int number, hand;
@@ -178,7 +187,12 @@ public class StoreImpl implements BaseDao, StudentDao {
    * @return 若返回1则代表修改商品信息成功，若返回-1代表修改信息失败
    */
   public Integer updateUser(String[] args) {
-    System.out.println(args);
+    for (String i : args) {
+      System.out.print(i);
+      System.out.print(",");
+    }
+    System.out.println(" ");
+
     String commodity_id, type, commodity_name, time, poster, image;
     double price, value, discount;
     int number, hand;
@@ -303,6 +317,8 @@ public class StoreImpl implements BaseDao, StudentDao {
    */
   public ArrayList<ArrayList<String>> searchOneUser(String lower, String upper, String name, String type,
       String hands) {
+    System.out.print(lower + "," + upper + "," + name + "," + type);
+    System.out.println(" ");
     Statement statement = null;
     ResultSet rs = null;
     ResultSetMetaData rsmd = null;
@@ -489,11 +505,64 @@ public class StoreImpl implements BaseDao, StudentDao {
     }
   }
 
+  /**
+   * 用于搜索消费记录中指定商品的信息
+   * 
+   * @param condition_name 需要查询的索引
+   * @param condition      索引值
+   * @return 返回为符合该索引值的所有信息， 每一行的信息为（0：一卡通号，1：姓名，2：商品id，3：商品名字，4：类型，5：数量，
+   *         6：花费，7：时间，8：来源人）
+   */
+  public ArrayList<ArrayList<String>> searchCommodity(String condition_name, String condition) {
+    Statement statement = null;
+    ResultSet rs = null;
+    ResultSetMetaData rsmd = null;
+    ArrayList<ArrayList<String>> al = new ArrayList<ArrayList<String>>();
+    ArrayList<String> temp = null;
+
+    try {
+      getConnection();
+      String sql = null;
+      statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+      if (condition_name.equals("null") && condition.equals("null"))
+        sql = "SELECT* FROM " + ConsumptionTableName;
+      else
+        sql = "SELECT* FROM " + ConsumptionTableName + " WHERE " + condition_name + " LIKE" + "'%" + condition + "%'"
+            + "ORDER BY" + " (CASE WHEN " + condition_name + "=" + "'" + condition + "'" + " THEN 1 WHEN "
+            + condition_name + " LIKE" + "'" + condition + "%'" + " THEN 2 WHEN " + condition_name + " LIKE" + "'%"
+            + condition + "%'" + " THEN 3 WHEN " + condition_name + " LIKE" + "'%" + condition + "'"
+            + " THEN 4 ELSE 5 END )";
+      rs = statement.executeQuery(sql);
+      rsmd = rs.getMetaData();
+      while (rs.next()) {
+        temp = new ArrayList<String>();
+        for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+          temp.add(rs.getString(i));
+        }
+        al.add(temp);
+      }
+
+      return al;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return al;
+    } finally {
+      try {
+        statement.close();
+        rs.close();
+        connection.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+
+  }
+
   public static void main(String[] args) {
     StoreImpl sl = new StoreImpl();
     // System.out.println(sl.searchOneUser("1", "100", "null", "null"));
     String temp[] = { "JS1", "薯片", "乐事", "28.9", "10", "0.8", "2021-07-14", "100", "1", "1" };
     // sl.updateUser(temp);
-    System.out.println(sl.searchAllRecord("213191246"));
+    System.out.println(sl.searchOneUser("0", "50", "null", "食品饮料", "null"));
   }
 }

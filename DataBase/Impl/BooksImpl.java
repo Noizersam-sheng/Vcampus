@@ -6,6 +6,14 @@ import java.util.*;
 import java.text.*;
 import java.sql.*;
 
+/**
+ * <p>
+ * <code>BookImpl</code>类是用于实现管理跟书籍有关的表。
+ * 该类接收从前端传入后端的信息，并且根据信息返回指定类型的操作，包括但不限于增删改查跟书籍有关的数据库的表。
+ * 
+ * @author 09019111赖泽升
+ * @version 1.0
+ */
 public class BooksImpl implements StudentDao, BaseDao {
   Connection connection;
   private static String database = "mysql";
@@ -69,12 +77,12 @@ public class BooksImpl implements StudentDao, BaseDao {
    * @return 若添加成功则返回1，否则返回-1
    */
   public Integer addUser(String[] args) {
-    for(String i:args){
+    for (String i : args) {
       System.out.print(i);
       System.out.print(",");
     }
     System.out.println(" ");
-    
+
     String book_id;
     String book_name;
     int gross, number, borrowed_num;
@@ -156,7 +164,7 @@ public class BooksImpl implements StudentDao, BaseDao {
    * @return 若返回1则代表修改书籍信息成功，若返回-1代表修改信息失败
    */
   public Integer updateUser(String[] args) {
-    for(String i:args){
+    for (String i : args) {
       System.out.print(i);
       System.out.print(",");
     }
@@ -209,6 +217,8 @@ public class BooksImpl implements StudentDao, BaseDao {
    * @return 返回为符合该索引值的所有信息， 每一行的信息为（0：书号，1：书名，2：馆藏数量，3：可借数量，4：总借阅数）
    */
   public ArrayList<ArrayList<String>> searchOneUser(String condition_name, String condition) {
+    System.out.print(condition_name + "," + condition);
+    System.out.println(" ");
     Statement statement = null;
     ResultSet rs = null;
     ResultSetMetaData rsmd = null;
@@ -257,6 +267,8 @@ public class BooksImpl implements StudentDao, BaseDao {
    * @return 返回为符合该索引值的所有信息， 每一行的信息为（0：书号，1：书名，2：馆藏数量，3：可借数量，4：总借阅数）
    */
   public ArrayList<ArrayList<String>> searchOneUser(String condition_name, String condition, String sortWay) {
+    System.out.print(condition_name + "," + condition + "," + sortWay);
+    System.out.println(" ");
     Statement statement = null;
     ResultSet rs = null;
     ResultSetMetaData rsmd = null;
@@ -266,10 +278,12 @@ public class BooksImpl implements StudentDao, BaseDao {
     String way = null;
     switch (sortWay) {
       case "1":
-        way = " ORDER BY" + " (CASE WHEN " + condition_name + "=" + "'" + condition + "'" + " THEN 1 WHEN "
-            + condition_name + " LIKE" + "'" + condition + "%'" + " THEN 2 WHEN " + condition_name + " LIKE" + "'%"
-            + condition + "%'" + " THEN 3 WHEN " + condition_name + " LIKE" + "'%" + condition + "'"
-            + " THEN 4 ELSE 5 END )";
+        way = " ORDER BY" + " (CASE WHEN " + condition_name + "=" 
+            + "'" + condition + "'" + " THEN 1 WHEN "+ condition_name 
+            + " LIKE" + "'" + condition + "%'" + " THEN 2 WHEN " 
+            + condition_name + " LIKE" + "'%"+ condition + "%'" 
+            + " THEN 3 WHEN " + condition_name + " LIKE" + "'%" 
+            + condition + "'"+ " THEN 4 ELSE 5 END )";
         break;
       case "2":
         way = " ORDER BY borrowed_num DESC";
@@ -350,7 +364,13 @@ public class BooksImpl implements StudentDao, BaseDao {
    * @return 若借书成功则返回1，否则返回-1
    */
   public Integer borrowBook(String args[]) {
-    String id, name, book_id, book_name, time, milliseconds;
+    for (String i : args) {
+      System.out.print(i);
+      System.out.print(",");
+    }
+    System.out.println(" ");
+
+    String id, book_id, book_name, time, milliseconds;
 
     id = args[0];
     book_id = args[1];
@@ -363,8 +383,7 @@ public class BooksImpl implements StudentDao, BaseDao {
     PreparedStatement pstmt = null;
     try {
       getConnection();
-      String sql = "INSERT INTO " + borrowTableName
-          + "(id,book_id,book_name,time,milliseconds) VALUES(?,?,?,?,?)";
+      String sql = "INSERT INTO " + borrowTableName + "(id,book_id,book_name,time,milliseconds) VALUES(?,?,?,?,?)";
       statement = connection.createStatement();
       pstmt = connection.prepareStatement(sql);
 
@@ -377,7 +396,7 @@ public class BooksImpl implements StudentDao, BaseDao {
       pstmt.addBatch();
       pstmt.clearParameters();
 
-      pstmt.executeBatch();
+      System.out.println(pstmt.executeBatch());
       pstmt.clearBatch();
 
       result = searchOneUser("book_id", book_id).get(0);
@@ -521,10 +540,11 @@ public class BooksImpl implements StudentDao, BaseDao {
   public static void main(String[] args) {
     BooksImpl bl = new BooksImpl();
     // System.out.println(bl.searchOneUser("book_name", "中国近"));
-    String temp[] = { "213191246", "赖泽升", "A11", "天空之城", "2021-7-14", "212156" };
-    bl.returnBook("213191246", "A11");
-    System.out.println(bl.searchOneUser("book_id", "11234"));
+    String temp[] = { "213191246", "A11", "天空之城", "2021-07-29", "1627547857560" };
+    // bl.returnBook("213191246", "A11");
+    // System.out.println(bl.searchOneUser("null", "null", "3"));
     // bl.borrowBook(temp);
     // System.out.println(bl.searchOneUser("book_name", "中国", "3"));
+    bl.borrowBook(temp);
   }
 }

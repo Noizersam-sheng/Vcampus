@@ -6,6 +6,15 @@ import java.util.*;
 import java.text.*;
 import java.sql.*;
 
+
+/**
+ * <p>
+ * <code>ShoppingCarImpl</code>类是用于实现管理跟购物车有关的表。
+ * 该类接收从前端传入后端的信息，并且根据信息返回指定类型的操作，包括但不限于增删改查跟购物车有关的数据库的表。
+ * 
+ * @author 09019111赖泽升
+ * @version 1.0
+ */
 public class ShoppingCarImpl implements BaseDao, StudentDao {
   Connection connection;
   private HashMap<String, String> hand = new HashMap<String, String>();
